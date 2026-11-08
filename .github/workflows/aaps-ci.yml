@@ -250,9 +250,19 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build APKs
+            - name: Build APKs
         run: |
-              ./gradlew :app:assemble${{ env.BUILD_VARIANT }} :wear:assemble${{ env.BUILD_VARIANT }} \
+          for attempt in 1 2 3; do
+            ./gradlew --version && break
+            if [ "$attempt" -eq 3 ]; then
+              echo "Gradle download failed after 3 attempts"
+              exit 1
+            fi
+            echo "Retrying Gradle download in 15 seconds..."
+            sleep 15
+          done
+
+          ./gradlew :app:assemble${{ env.BUILD_VARIANT }} :wear:assemble${{ env.BUILD_VARIANT }} \
               -Dorg.gradle.jvmargs="-Xmx8g -XX:+UseParallelGC -Xss1024m" \
               -Dkotlin.daemon.jvm.options="-Xmx2g" \
               -Dkotlin.compiler.execution.strategy="in-process" \
